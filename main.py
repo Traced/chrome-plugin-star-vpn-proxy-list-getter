@@ -28,10 +28,6 @@ def write_file(fn, c):
     open(fn, 'w').write(c)
 
 
-'''
-var key = CryptoJS.enc.Utf8.parse(hex_md5(json.s + ConsoleManager.onOpen.toString() + ConsoleManager.onClose.toString() + ConsoleManager.init.toString() + client.init.toString() + client.checkProxy.toString() + client.getProxy.toString() + p.on.toString()).substring(json.startIndex,json.endIndex));var decrypt = CryptoJS.AES.decrypt(json.d, key, {mode:CryptoJS.mode.ECB,padding: CryptoJS.pad.Pkcs7});var d = CryptoJS.enc.Utf8.stringify(decrypt).toString();
-'''
-
 headers = {
     'Connection': 'keep-alive',
     'sec-ch-ua': '"Google Chrome";v="89", "Chromium";v="89", ";Not A Brand";v="99"',
