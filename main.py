@@ -85,12 +85,16 @@ def get(url):
     return requests.get(url, headers=headers, cookies=cookies)
 
 
-def is_expire(uid=current_acc):
+def is_expire(uid):
     print('正在检测帐号%s是否在体验时间段内' % uid)
     t = post(
         'https://astarvpn.center/astarnew/user/userInfo?1618148703377',
         {'strP': 'jajilbjjinjmgcibalaakngmkilboobh', 'strlognid': uid}
-    ).json()['jsonObject']['nCurrValidTime']
+    ).json()
+    if t['nCode'] > 0:
+        print(t['strText'])
+        return True
+    t = t['jsonObject']['nCurrValidTime']
     print('免费时长剩余：', t)
     return t == '0'
 
@@ -122,7 +126,7 @@ def get_proxy_list():
 
 
 def map_proxy_list():
-    if is_expire():
+    if is_expire(current_acc):
         print('免费时间过去了，正在注册新帐号...')
         reg = register()
         if reg is True:
@@ -144,7 +148,7 @@ def map_proxy_list():
     return [
         get_proxy_result(r.json())
         for r in grequests.map(get_proxy(j['s'], i['i']) for i in l)
-        if get_proxy_result(r.json())
+        if r and get_proxy_result(r.json())
     ]
 
 
@@ -162,6 +166,7 @@ def register():
     r = post('https://astarvpn.center/astarnew/user/register', data=data).json()
     print('注册返回结果：', r)
     if 'successful' in r['strText']:
+        global current_acc
         current_acc = acc
         write_file('login.id', acc)
         return True
@@ -169,6 +174,7 @@ def register():
 
 
 if __name__ == '__main__':
-    pl = '\r\n'.join(map_proxy_list())
-    write_file('proxy.list', pl)
-    print('已将获取到的代理写入 proxy.list 当中.')
+    pl = map_proxy_list()
+    plt = '\r\n'.join(pl)
+    write_file('proxy.list', plt)
+    print('已将获取到的%s个代理写入 proxy.list 当中.' % len(pl))

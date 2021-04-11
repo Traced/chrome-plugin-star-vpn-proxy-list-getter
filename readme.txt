@@ -1,3 +1,6 @@
+免责申明：
+    本项目仅供研究学习使用，如有侵权再说吧
+
 依赖：
     需要 python3
     pip install grequests requests pycrypto
