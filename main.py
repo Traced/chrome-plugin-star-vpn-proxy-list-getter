@@ -87,10 +87,12 @@ def get(url):
 
 def is_expire(uid=current_acc):
     print('正在检测帐号%s是否在体验时间段内' % uid)
-    return post(
+    t = post(
         'https://astarvpn.center/astarnew/user/userInfo?1618148703377',
         {'strP': 'jajilbjjinjmgcibalaakngmkilboobh', 'strlognid': uid}
-    ).json()['jsonObject']['nCurrValidTime'] == '0'
+    ).json()['jsonObject']['nCurrValidTime']
+    print('免费时长剩余：', t)
+    return t == '0'
 
 
 def get_proxy_result(rsp):
