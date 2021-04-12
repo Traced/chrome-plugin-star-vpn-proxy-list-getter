@@ -9,6 +9,7 @@ import time
 import json
 import os
 from urllib3.exceptions import InsecureRequestWarning
+from test_proxy import TestProxy
 
 # Suppress only the single warning from urllib3 needed.
 requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
@@ -162,7 +163,6 @@ def register():
     }
 
     r = post('https://astarvpn.center/astarnew/user/register', data=data).json()
-    print('注册返回结果：', r)
     if 'successful' in r['strText']:
         global current_acc
         current_acc = acc
@@ -176,3 +176,5 @@ if __name__ == '__main__':
     plt = '\r\n'.join(pl)
     write_file('proxy.list', plt)
     print('已将获取到的%s个代理写入 proxy.list 当中.' % len(pl))
+    print('开始筛选代理，你可以通过设置超时时间来作为筛选条件')
+    TestProxy(pl,timeout=0.5)
