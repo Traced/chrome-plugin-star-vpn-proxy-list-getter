@@ -14,6 +14,10 @@
 运行：
     python main.py
 
+连通性测试:
+    默认采用 telnet 方式进行测试
+    python test_proxy.py
+
 输出文件：
     login.id   - 每次注册的新帐号会写入到这里面，帐号密码一样
     proxy.list - 完整获取代理后，会将代理写入到这里面
