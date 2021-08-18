@@ -13,7 +13,7 @@ import os
 import re
 from test_proxy import TestProxy
 from mailbox import Mailbox
-from http_utils import proxy_post
+from http_utils import proxy_post, default_proxy
 
 # Suppress only the single warning from urllib3 needed.
 requests.packages.urllib3.disable_warnings()
@@ -164,8 +164,8 @@ def register(mail_addr):
         'strvcode': 'zz43',
         'clientUUID': '8d3c97bd-57e3-432e-837d-44696eec34662021310224038437'
     }
-    
-    r = proxy_post(url_prefix + '/user/register', data=data).json()
+    request_method = default_proxy and proxy_post or post
+    r = request_method(url_prefix + '/user/register', data=data).json()
     if 'successful' in r['strText']:
         global current_acc
         current_acc = acc
