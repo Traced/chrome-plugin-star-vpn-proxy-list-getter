@@ -6,6 +6,7 @@ import hashlib
 from crypto import Cipher_AES
 import base64
 import time
+import datetime
 import json
 import os
 from urllib3.exceptions import InsecureRequestWarning
@@ -33,7 +34,7 @@ def write_file(fn, c):
 
 headers = {
     'Connection': 'keep-alive',
-    'sec-ch-ua': '"Google Chrome";v="89", "Chromium";v="89", ";Not A Brand";v="99"',
+    'sec-ch-ua': '"Google Chrome";v="91", "Chromium";v="91", ";Not A Brand";v="99"',
     'Accept': 'application/json, text/javascript, */*; q=0.01',
     'DNT': '1',
     'sec-ch-ua-mobile': '?0',
@@ -45,6 +46,12 @@ headers = {
     'Sec-Fetch-Dest': 'empty',
     'Accept-Language': 'en-US,en;q=0.9,zh-CN;q=0.8,zh;q=0.7',
 }
+
+def get_domain_prefix():
+    today = datetime.datetime.now()
+    return 'w%s%s%ss'%(today.month,today.day,today.hour)
+
+url_prefix = 'https://%s.astarvpn.center/astarnew'%get_domain_prefix()
 
 key = b64_decode(read_file('keyjs.txt'))
 
@@ -87,7 +94,7 @@ def get(url):
 def is_expire(uid):
     print('正在检测帐号%s是否在体验时间段内' % uid)
     t = post(
-        'https://astarvpn.center/astarnew/user/userInfo?1618148703377',
+        url_prefix+'/user/userInfo?1618148703377',
         {'strP': 'jajilbjjinjmgcibalaakngmkilboobh', 'strlognid': uid}
     ).json()
     if t['nCode'] > 0:
@@ -109,7 +116,7 @@ def get_proxy_result(rsp):
 
 def get_proxy(s, i) -> dict:
     return gpost(
-        'https://astarvpn.center/astarnew/NewVPN/getProxy?%s' % time.time(),
+        url_prefix+'/NewVPN/getProxy?%s' % time.time(),
         {'strP': 'jajilbjjinjmgcibalaakngmkilboobh', 'lid': i, 'strtoken': s, 'nonlinestate': '1', 'version': '109',
          'strlognid': current_acc}
     )
@@ -117,7 +124,7 @@ def get_proxy(s, i) -> dict:
 
 def get_proxy_list():
     j = post(
-        'https://astarvpn.center/astarnew/NewVPN/getProxyList',
+        url_prefix+'/NewVPN/getProxyList',
         {'strP': 'jajilbjjinjmgcibalaakngmkilboobh', 'nonlinestate': '1', 'version': '109',
          'strlognid': current_acc}
     ).json()
@@ -131,6 +138,7 @@ def map_proxy_list():
         if reg is True:
             print('注册成功，使用新注册帐号[%s]重新获取代理' % read_file('login.id'))
             return map_proxy_list()
+        print(reg)
         print('想个办法换个 ip 试试？')
         exit(2)
     print('正在获取可用代理列表', flush=True)
@@ -162,7 +170,7 @@ def register():
         'clientUUID': '8d3c97bd-57e3-432e-837d-44696eec34662021310224038437'
     }
 
-    r = post('https://astarvpn.center/astarnew/user/register', data=data).json()
+    r = post(url_prefix+'/user/register', data=data).json()
     if 'successful' in r['strText']:
         global current_acc
         current_acc = acc
@@ -172,9 +180,15 @@ def register():
 
 
 if __name__ == '__main__':
+    print(decode_response(
+    {"startIndex":11,"s":"e71a2be934d04b419ec401d3ae9161af",
+    "d":"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","endIndex":27}))
+    '''
+
     pl = map_proxy_list()
     plt = '\r\n'.join(pl)
     write_file('proxy.list', plt)
     print('已将获取到的%s个代理写入 proxy.list 当中.' % len(pl))
     print('开始筛选代理，你可以通过设置超时时间来作为筛选条件')
     TestProxy(pl,timeout=0.5)
+    '''
