@@ -5,8 +5,8 @@
     这个项目是我花了几十分钟搞出来的，没有规范
 
 依赖：
-    需要 python3
-    pip install grequests requests pycrypto
+    需要 python3.6+
+    pip install grequests requests pycrypto Faker httpx
 
 报错解决：
     如果你安装 pycrypto 失败，请试试 pycryptodome
