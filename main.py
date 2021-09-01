@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/local/bin/python3
 # coding:utf-8
 import grequests
 import requests
@@ -57,7 +57,7 @@ def get_domain_prefix():
     return 'w%s%s%ss' % (today.month, today.day, today.hour)
 
 
-url_prefix = 'https://%s.astarvpn.center/astarnew' % get_domain_prefix()
+url_prefix = 'https://%s.clickext.com/astarnew' % get_domain_prefix()
 
 key = b64_decode(read_file('keyjs.txt'))
 
@@ -138,7 +138,7 @@ def get_proxy_list():
         url_prefix + '/NewVPN/getProxyList',
         {**plugin_version_info, 'strlognid': current_acc}
     ).json()
-    
+
     return json.loads(decode_response(j)), j
 
 
@@ -161,11 +161,11 @@ def register(mail_addr):
         **plugin_version_info,
         'strlognid': acc,
         'strpassword': acc,
-        'strvcode': 'zz43',
+        'strvcode': '123456',
         'clientUUID': '8d3c97bd-57e3-432e-837d-44696eec34662021310224038437'
     }
     request_method = default_proxy and proxy_post or post
-    r = request_method(url_prefix + '/user/register', data=data).json()
+    r = request_method(url_prefix + '/user/register?%s'%time.time(), data=data).json()
     if 'successful' in r['strText']:
         global current_acc
         current_acc = acc

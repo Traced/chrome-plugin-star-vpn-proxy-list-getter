@@ -1,6 +1,7 @@
 import time
 import httpx
 import asyncio
+import urllib3
 from functools import reduce
 
 default_proxy = ''
@@ -42,7 +43,7 @@ def async_request(request_handle: callable, response_handle: callable = None, ne
     if not callable(request_handle): return None
     is_single_request: list = []
     create_task = getattr(asyncio, 'create_task', asyncio.ensure_future)
-    
+
     async def __request():
         # http = globals()['async_http_client']
         async with httpx.AsyncClient(**client_config) as http:
@@ -52,7 +53,7 @@ def async_request(request_handle: callable, response_handle: callable = None, ne
                 is_single_request.append(0)
                 req_list = (req_list,)
             return iter(await asyncio.gather(*[create_task(req) for req in req_list]))
-    
+
     # 不需要处理时候等待请求执行完毕后不做任何操作
     if not need_handle: return asyncio.run(__request())
     responses = get_async_result(__request)
@@ -64,13 +65,13 @@ def async_request(request_handle: callable, response_handle: callable = None, ne
 
 class Method(object):
     this = None
-    
+
     def __init__(self, name=None, *arg, **args):
         self.attrs = dict(name=name, args=arg, kwargs=args)
-    
+
     def info(self):
         return self.attrs
-    
+
     def bind(self, this: object = None):
         self.this = this
         if hasattr(this, self.attrs['name']):
@@ -84,26 +85,26 @@ class Method(object):
 class ClassMethodParser(object):
     __parse_list__ = []
     __caller__ = None
-    
+
     def __init__(self, caller=None):
         self.__caller__ = caller
-    
+
     def __getattr__(self, name):
         protected = {'__caller__': self.__caller__, '__parse_list__': self.__parse_list__}
-        
+
         def injector(*arg, **args):
             m = Method(name, *arg, **args)
             self.__parse_list__.append(m)
             return self.this and m.bind(self.this) or m.bind
-        
+
         return name in protected and protected[name] or injector
-    
+
     def __len__(self):
         return len(self.__parse_list__)
-    
+
     def __delitem__(self, key):
         return self.__parse_list__.pop(key)
-    
+
     def __getitem__(self, index):
         return self.__parse_list__[index]
 
@@ -111,34 +112,38 @@ class ClassMethodParser(object):
 class Proxy(object):
     proxy_server: str = ''
     debug: bool = False
-    
+
     def __init__(self, proxy_server: str = default_proxy, debug=False):
         self.proxy_server = proxy_server
         self.debug = debug
-    
+
     def log(self, *arg, **args):
         if self.debug:
             print(*arg, **args)
         return self
-    
+
     def set_proxy_server(self, proxy_server: str = ''):
         self.proxy_server = proxy_server
         return self
-    
+
     def request(self, route: str = ''):
-        return get(self.proxy_server + route, verify=False, timeout=3)
-    
+        if self.proxy_server=="":
+            raise "代理池地址不能为空！"
+        return get(self.proxy_server +route, verify=False, timeout=3)
+
     def delete(self, proxy_ip: str = ''):
         self.request(f'/delete/?proxy={proxy_ip}')
         return self
-    
+
     def pop(self, proxy_type='http'):
         return self.request(f'/pop/?type={proxy_type}').json()
-    
+
     def get(self, proxy_type='http'):
         return self.request(f'/get/?type={proxy_type}').json().get('proxy', '')
-    
+
     def get_and_test(self, url: str = 'https://baidu.com', num: int = 3, timeout=1):
+        # 只测试域名是否能访问
+        url = '://'.join(urllib3.get_host(url)[:2])
         proxy_list, proxy_type = [], f'http{["", "s"][url[5] == "s"]}'
         while num > 0:
             proxy_ip = self.get(proxy_type)
@@ -199,10 +204,10 @@ def proxy_async_request(request_handle: callable,
     cmp = ClassMethodParser()
     request_chunk = chunks(request_handle(cmp), request_chunk_number)
     print(f'本次请求总数：{len(cmp)},分块个数{request_chunk_number}')
-    
+
     def re_wrap(reqs):
         return lambda http: isinstance(reqs, Method) and reqs.bind(http) or [req.bind(http) for req in reqs]
-    
+
     test_url = cmp[0].attrs.get('args')[0]
     pl = proxy.get_and_test(test_url, num=len(cmp))
     print('本次访问使用代理：', pl)
@@ -214,7 +219,7 @@ def proxy_async_request(request_handle: callable,
 
 if __name__ == '__main__':
     r = proxy_async_request(
-        lambda http: (http.get('http://baidu.com', timeout=3), http.get('http://qq.com', timeout=4),),
+        lambda http: (http.get('http://www.omso2o.com', timeout=8), http.get('http://qq.com', timeout=4),),
         request_chunk_number=1)
     for e in r:
         print(e.status_code)

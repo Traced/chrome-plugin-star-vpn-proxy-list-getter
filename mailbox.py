@@ -52,6 +52,8 @@ class Mailbox(object):
         resp = self.http.get(self.api_url + self.address)
         if resp.status_code != 200:
             print('查询新邮件失败：', resp.text)
+            if 'expired' in resp.text:
+                self.get_new_mail_box(self.address.split('@')[0])
             return []
         return resp.json()
     
@@ -103,8 +105,9 @@ class Mailbox(object):
 
 
 def handle(r):
-    return not ('stop' in r['body']['html'])
+    print(r['body']['text'])
+    return False
 
 
 if __name__ == '__main__':
-    Mailbox(True).forever()
+    Mailbox(True, username='daniellepitts').forever()
