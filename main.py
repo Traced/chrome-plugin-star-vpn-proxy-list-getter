@@ -66,7 +66,7 @@ current_acc = read_file('login.id')
 plugin_version_info = {
     'strP': 'jajilbjjinjmgcibalaakngmkilboobh',
     'nonlinestate': '1',
-    'version': '111'
+    'version': '112'
 }
 
 
@@ -182,7 +182,6 @@ def active_account(active_resp):
         requests.get(active_url[0])
         return False
     return True
-
 
 if __name__ == '__main__':
     mail = Mailbox(True, active_account)
