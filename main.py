@@ -66,7 +66,7 @@ current_acc = read_file('login.id')
 plugin_version_info = {
     'strP': 'jajilbjjinjmgcibalaakngmkilboobh',
     'nonlinestate': '1',
-    'version': '112'
+    'version': '113'
 }
 
 
@@ -127,8 +127,9 @@ def get_proxy_result(rsp):
 
 
 def get_proxy(s, i) -> dict:
+    # % time.time()
     return gpost(
-        url_prefix + '/NewVPN/getProxy?%s' % time.time(),
+        url_prefix + '/NewVPN/getProxy?%s',
         {'lid': i, 'strtoken': s, 'strlognid': current_acc, **plugin_version_info}
     )
 
@@ -138,7 +139,7 @@ def get_proxy_list():
         url_prefix + '/NewVPN/getProxyList',
         {**plugin_version_info, 'strlognid': current_acc}
     ).json()
-
+    
     return json.loads(decode_response(j)), j
 
 
@@ -160,12 +161,12 @@ def register(mail_addr):
     data = {
         **plugin_version_info,
         'strlognid': acc,
-        'strpassword': acc,
+        'strpassword': '1234aa',
         'strvcode': '123456',
         'clientUUID': '8d3c97bd-57e3-432e-837d-44696eec34662021310224038437'
     }
     request_method = default_proxy and proxy_post or post
-    r = request_method(url_prefix + '/user/register?%s'%time.time(), data=data).json()
+    r = request_method(url_prefix + '/user/register?%s' % time.time(), data=data).json()
     if 'successful' in r['strText']:
         global current_acc
         current_acc = acc
@@ -183,10 +184,11 @@ def active_account(active_resp):
         return False
     return True
 
+
 if __name__ == '__main__':
     mail = Mailbox(True, active_account)
-    register(mail.address)
-    mail.forever(active_account)
+    if isinstance(register(mail.address), bool):
+        mail.forever(active_account)
     pl = map_proxy_list()
     plt = '\r\n'.join(pl)
     write_file('proxy.list', plt)
