@@ -219,7 +219,7 @@ def proxy_async_request(request_handle: callable,
 
 if __name__ == '__main__':
     r = proxy_async_request(
-        lambda http: (http.get('http://www.omso2o.com', timeout=8), http.get('http://qq.com', timeout=4),),
+        lambda http: (http.get('http://httpbin.org', timeout=8), http.get('http://qq.com', timeout=4),),
         request_chunk_number=1)
     for e in r:
         print(e.status_code)
