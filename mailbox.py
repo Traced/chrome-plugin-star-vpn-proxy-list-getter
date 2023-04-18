@@ -5,20 +5,19 @@ from faker import Faker
 import requests
 import time
 
-'''
-    临时邮箱
-'''
+
+def get_suffix() -> str:
+    return '@yzm.de'
 
 
 class Mailbox(object):
-    counter: int = 0
     address: str = ''
     token: str = ''
     url: str = "https://mail.td"
     api_url = url + '/api/api/v1/mailbox/'
     faker = Faker()
     http = requests.Session()
-    
+
     def __init__(self, get_new_mail: bool = False, default_handle: callable = None, username: str = ''):
         self.http.headers = {
             'authority': 'mail.td',
@@ -30,12 +29,24 @@ class Mailbox(object):
             self.default_handle = default_handle
         if get_new_mail:
             self.get_new_mail_box(username)
-    
+
     def faker_username(self) -> str:
         return self.faker.name().lower().replace(' ', '')
-    
+
+    def faker_mail_addr(self):
+        return self.faker_username() + str(int(time.time())) + get_suffix()
+
+    def delete_mail(self, mail_id: str) -> bool:
+        return self.http.delete(f'{self.api_url}/{self.address}/{mail_id}').text == 'OK'
+
+    def empty(self):
+        for m in self.query_mails(None):
+            print('删除邮件：', m['id'])
+            self.delete_mail(m['id'])
+        return self
+
     def get_new_mail_box(self, username: str = ''):
-        self.address = (username or self.faker_username()) + '@uuf.me'
+        self.address = username or self.faker_mail_addr()
         resp = self.http.get(self.url)
         if resp.status_code != 200:
             print('邮箱申请失败：', resp.text)
@@ -44,8 +55,8 @@ class Mailbox(object):
         self.token = resp.cookies.get('auth_token')
         self.http.headers['authorization'] = 'bearer ' + self.token
         return self
-    
-    def query_new_mail(self) -> list:
+
+    def query_mails(self, seen=False) -> list:
         if not self.token:
             print('请先申请新邮箱！')
             return []
@@ -55,8 +66,9 @@ class Mailbox(object):
             if 'expired' in resp.text:
                 self.get_new_mail_box(self.address.split('@')[0])
             return []
-        return resp.json()
-    
+        mails = resp.json()
+        return seen is None and mails or [m for m in mails if m['seen'] == seen]
+
     def get_body(self, resp_item: dict):
         mid = resp_item.get('id', None)
         if not mid:
@@ -65,8 +77,9 @@ class Mailbox(object):
         if resp.status_code != 200:
             print('获取邮件内容失败：', resp.text)
             return None
+        self.http.patch(self.api_url + self.address + '/' + mid, json={'seen': True})
         return resp.json()
-    
+
     def default_handle(self, resp: dict) -> bool:
         if not resp: return False
         if not resp:
@@ -74,13 +87,8 @@ class Mailbox(object):
         print("%s - %s:\n\t%s\n\t%s\n\n" % (
             resp['from'], resp['date'], resp['subject'], resp['body']['html']))
         return True
-    
-    def forever(self, new_mail_handle: callable = None, interval: float = 2):
-        '''
-         等待新邮件
-        :param new_mail_handle: 处理新邮件，返回 True 则代表继续等待，False 则终止
-        :param interval: 收取新邮件间隔
-        '''
+
+    def forever(self, new_mail_handle: callable = None, interval: float = 2, clear=True):
         if not self.token:
             print('请先申请新邮箱！')
             return
@@ -89,17 +97,16 @@ class Mailbox(object):
         # 最小查询新邮件间隔
         if 0.5 > interval: interval = 0.5
         print('等待接收', self.address, '的新邮件中..')
-        # 等待
         while True:
-            new_mail_list = self.query_new_mail()
-            new_mail_count = len(new_mail_list) - self.counter
+            new_mail_list = self.query_mails()
+            new_mail_count = len(new_mail_list)
             if new_mail_count > 0:
-                # 更新已有已有邮件数量
-                self.counter += new_mail_count
-                print('有 %d 封新邮件' % new_mail_count)
-                for resp_item in new_mail_list[-new_mail_count:]:
+                print('有 %d 封未读邮件' % new_mail_count)
+                for resp_item in new_mail_list:
                     keep = new_mail_handle(self.get_body(resp_item))
                     if not keep:
+                        if clear:
+                            self.empty()
                         return
             time.sleep(interval)
 
@@ -110,4 +117,4 @@ def handle(r):
 
 
 if __name__ == '__main__':
-    Mailbox(True, username='tester').forever()
+    Mailbox(True, username='tester'+get_suffix()).forever()
