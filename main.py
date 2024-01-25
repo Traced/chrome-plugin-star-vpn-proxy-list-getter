@@ -56,12 +56,13 @@ def get_proxy_result(rsp):
     return None
 
 
-plugin_version_info = {
-    'strP': 'jajilbjjinjmgcibalaakngmkilboobh',
-    'nonlinestate': '1',
-    'version': '114'
-}
 
+plugin_version_info = {
+    "strP": "jajilbjjinjmgcibalaakngmkilboobh",
+    "nonlinestate": 1,
+    "version": "116",
+    "apiSource": "web"
+}
 
 def active_account(active_resp):
     active_url = re.findall(r'(http.+) ', active_resp['body']['text'])
@@ -181,8 +182,8 @@ class Astar(object):
             print('注册成功，激活中')
             self.mb.forever(active_account)
             cks = {
-                'JSESSIONID': '9AAD4A3329938A4C6545662F5368C463',
-                'token': 'af0c24670c97dd78584b47a1a7d6f087',
+                'JSESSIONID': '5C1B480FCA5AE1822AEA40333169C616',
+                'token': '1a785f86b28753f4405515d7a2157001',
                 'strLoginId': mail_addr,
             }
             for k in cks:
